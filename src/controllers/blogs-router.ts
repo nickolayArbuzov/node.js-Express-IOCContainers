@@ -10,6 +10,7 @@ blogsRouter.get('/', async (req: Request, res: Response) => {
 });
 
 blogsRouter.post('/', validMiddleware, async (req: Request, res: Response) => {
+    console.log('blogs', req)
     const video = {
         id: req.body.id,
         title: req.body.title,
@@ -33,6 +34,7 @@ blogsRouter.get('/:id/posts', async (req: Request, res: Response) => {
 });
 
 blogsRouter.post('/:id/posts', validMiddleware, async (req: Request, res: Response) => {
+    console.log('blogs-post', req)
     const video = {
         id: req.body.id,
         title: req.body.title,
