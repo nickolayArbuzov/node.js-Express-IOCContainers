@@ -20,7 +20,7 @@ const { body} = require('express-validator');
 export const blogsRouter = Router({})
 
 blogsRouter.get('/',searchNameTermSanitizer,pageNumberSanitizer, pageSizeSanitizer, sortBySanitizer,sortDirectionSanitizer, async (req: Request, res: Response) => {
-
+    
     console.log("get blogs PN "+req.query.pageNumber)
     console.log("get blogs PS "+req.query.pageSize)
 
