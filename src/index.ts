@@ -1,13 +1,11 @@
 import express, {Request, Response} from 'express'
 import * as dotenv from 'dotenv'
-import cors from 'cors'
-import bodyParser from 'body-parser'
-import {videoRouter} from "./controllers/video-router";
-import { blogsCollection, postsCollection, runDb, usersCollection, videoCollection } from './infrastructure/db';
-import { authRouter } from './controllers/auth-router';
-import { blogsRouter } from './controllers/blogs-router';
-import { postsRouter } from './controllers/posts-router';
-import { usersRouter } from './controllers/users-router';
+import bodyParser from "body-parser";
+import {blogsRouter} from "./routes/blogsRouter";
+import {postsRouter} from "./routes/postsRouter";
+import {authRouter} from "./routes/authRouter";
+import { usersRouter } from './routes/usersRouter';
+import { blogCollection, postCollection, runDb, userCollection } from './repositories/db';
 
 dotenv.config()
 
@@ -15,17 +13,14 @@ const port = process.env.PORT || 7777
 export const app = express()
 
 app.use(bodyParser.json())
-app.use(cors())
 app.use('/auth', authRouter) 
 app.use('/blogs', blogsRouter) 
 app.use('/posts', postsRouter) 
 app.use('/users', usersRouter) 
-app.use('/videos', videoRouter) 
 app.delete('/testing/all-data', async (req: Request, res: Response) => {
-    await postsCollection.deleteMany({})
-    await blogsCollection.deleteMany({})
-    await videoCollection.deleteMany({})
-    await usersCollection.deleteMany({})
+    await postCollection.deleteMany({})
+    await blogCollection.deleteMany({})
+    await userCollection.deleteMany({})
     res.sendStatus(204)
 }) 
 
