@@ -48,6 +48,7 @@ blogsRouter.post('/:id/posts', validMiddleware, async (req: Request, res: Respon
 });
 
 blogsRouter.get('/:id', async (req: Request, res: Response) => {
+    console.log('blogs-req', req)
     const result = await blogsCollection.find({id: req.params.id}).project({_id: 0}).toArray()
     if(result.length > 0) {
         res.send(result)
