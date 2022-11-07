@@ -21,7 +21,7 @@ app.use('/blogs', blogsRouter)
 app.use('/posts', postsRouter) 
 app.use('/users', usersRouter) 
 app.use('/videos', videoRouter) 
-app.use('/testing/all-data', async (req: Request, res: Response) => {
+app.delete('/testing/all-data', async (req: Request, res: Response) => {
     console.log('test')
     await blogsCollection.deleteMany({})
     await videoCollection.deleteMany({})
