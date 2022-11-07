@@ -7,7 +7,9 @@ const mongoUri = process.env.MONGO_URL || ''
 
 export const client = new MongoClient(mongoUri)
 const db = client.db('blogs')
+export const videoCollection = db.collection('video')
 export const blogsCollection = db.collection('blogs')
+export const usersCollection = db.collection('users')
 
 export const runDb = async () => {
     try {

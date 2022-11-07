@@ -22,7 +22,7 @@ describe('/video', () => {
         minAgeRestriction: 18,
     }
 
-    it('should delete all videos', async () => {
+    it('should delete all data', async () => {
         await request(app).delete('/testing/all-data').expect(204)
     })
 
