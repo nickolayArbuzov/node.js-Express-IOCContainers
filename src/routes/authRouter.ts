@@ -14,5 +14,5 @@ authRouter.post('/login', body('login').trim().isLength({min:1}),body('password'
     }
     const token = await jwtService.createJwt(user)
     console.log(token)
-    res.status(200).send(token)
+    res.status(204).send(token)
 })
