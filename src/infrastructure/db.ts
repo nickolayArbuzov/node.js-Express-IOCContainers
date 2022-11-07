@@ -9,6 +9,7 @@ export const client = new MongoClient(mongoUri)
 const db = client.db('blogs')
 export const videoCollection = db.collection('video')
 export const blogsCollection = db.collection('blogs')
+export const postsCollection = db.collection('posts')
 export const usersCollection = db.collection('users')
 
 export const runDb = async () => {

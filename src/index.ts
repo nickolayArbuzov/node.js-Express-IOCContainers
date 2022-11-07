@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv'
 import cors from 'cors'
 import bodyParser from 'body-parser'
 import {videoRouter} from "./controllers/video-router";
-import { blogsCollection, runDb, usersCollection, videoCollection } from './infrastructure/db';
+import { blogsCollection, postsCollection, runDb, usersCollection, videoCollection } from './infrastructure/db';
 import { authRouter } from './controllers/auth-router';
 import { blogsRouter } from './controllers/blogs-router';
 import { postsRouter } from './controllers/posts-router';
@@ -22,7 +22,7 @@ app.use('/posts', postsRouter)
 app.use('/users', usersRouter) 
 app.use('/videos', videoRouter) 
 app.delete('/testing/all-data', async (req: Request, res: Response) => {
-    console.log('test')
+    await postsCollection.deleteMany({})
     await blogsCollection.deleteMany({})
     await videoCollection.deleteMany({})
     await usersCollection.deleteMany({})

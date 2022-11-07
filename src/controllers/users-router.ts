@@ -5,7 +5,6 @@ import { emailValidation, inputValidationMiddleware, loginValidation } from '../
 export const usersRouter = Router();
 
 usersRouter.get('/', async (req: Request, res: Response) => {
-    console.log('req.query', req.query)
     const count = await usersCollection.count({})
     const result = await usersCollection.find({}).limit(1).skip(1).project({_id: 0}).toArray()
     res.send(result)

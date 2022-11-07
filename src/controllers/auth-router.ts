@@ -4,7 +4,7 @@ import { emailValidation, inputValidationMiddleware, loginValidation } from '../
 
 export const authRouter = Router();
 
-authRouter.post('/', loginValidation, emailValidation, inputValidationMiddleware, async (req: Request, res: Response) => {
+authRouter.post('/login', loginValidation, emailValidation, inputValidationMiddleware, async (req: Request, res: Response) => {
 
     const auth = await usersCollection.findOne({
         $and: [

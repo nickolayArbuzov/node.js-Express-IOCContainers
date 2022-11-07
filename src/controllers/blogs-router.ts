@@ -10,7 +10,6 @@ blogsRouter.get('/', async (req: Request, res: Response) => {
 });
 
 blogsRouter.post('/', validMiddleware, async (req: Request, res: Response) => {
-    console.log('blogs', req)
     const video = {
         id: req.body.id,
         title: req.body.title,
@@ -34,7 +33,6 @@ blogsRouter.get('/:id/posts', async (req: Request, res: Response) => {
 });
 
 blogsRouter.post('/:id/posts', validMiddleware, async (req: Request, res: Response) => {
-    console.log('blogs-post', req)
     const video = {
         id: req.body.id,
         title: req.body.title,
@@ -50,7 +48,6 @@ blogsRouter.post('/:id/posts', validMiddleware, async (req: Request, res: Respon
 });
 
 blogsRouter.get('/:id', async (req: Request, res: Response) => {
-    console.log('blogs-req', req)
     const result = await blogsCollection.find({id: req.params.id}).project({_id: 0}).toArray()
     if(result.length > 0) {
         res.send(result)
