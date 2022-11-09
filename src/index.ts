@@ -1,6 +1,7 @@
 import express, {Request, Response} from 'express'
 import * as dotenv from 'dotenv'
 import bodyParser from "body-parser";
+import cookieParser from 'cookie-parser';
 import {blogsRouter} from "./routes/blogsRouter";
 import {postsRouter} from "./routes/postsRouter";
 import {authRouter} from "./routes/authRouter";
@@ -13,6 +14,7 @@ const port = process.env.PORT || 7777
 export const app = express()
 
 app.use(bodyParser.json())
+app.use(cookieParser())
 app.use('/auth', authRouter) 
 app.use('/blogs', blogsRouter) 
 app.use('/posts', postsRouter) 
