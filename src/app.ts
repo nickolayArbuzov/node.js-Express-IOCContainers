@@ -1,5 +1,6 @@
 import express, {Request, Response} from 'express'
 import cookieParser from 'cookie-parser'
+import cors from 'cors';
 import {blogsRouter} from "./routes/blogsRouter";
 import {postsRouter} from "./routes/postsRouter";
 import { usersRouter } from './routes/usersRouter';
@@ -10,6 +11,7 @@ import { blogCollection, commentCollection, jwtCollection, logCollection, postCo
 const port = process.env.PORT || 7777
 export const app = express()
 
+app.use(cors())
 app.use(express.json())
 app.use(cookieParser())
 app.use('/blogs', blogsRouter) 
