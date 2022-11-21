@@ -1,18 +1,49 @@
-import {Router,Request, Response} from "express";
-import {userService} from "../domain/user-service";
-import {body} from "express-validator";
-import {jwtService} from "../application/jwt-service";
-import { inputValidationMiddleware } from "../middlewares/inputValidationMiddleware";
+import {Router} from "express";
+import { container } from "../composition-root";
+import { AuthController } from "../controllers/authController";
+import { jwtMiddleware } from "../middlewares/authGuard";
+import { userEmailIsExistsValidation, userLoginIsExistsValidation, userCodeRegistrationIsValid, userEmailConfirmValidation } from "../middlewares/checkUserMiddleware";
+import { 
+    inputValidationMiddleware,
+    logger,
+    userEmailValidation, 
+    userLoginValidation, 
+    userPasswordValidation, 
+} from "../middlewares/middleware";
+
+const authController = container.resolve(AuthController)
 
 export const authRouter = Router({})
 
-authRouter.post('/login', body('login').trim().isLength({min:1}),body('password').trim().isLength({min:1}) , inputValidationMiddleware, async (req:Request, res:Response)=>{
-    const user = await userService.checkCredentials(req.body.login, req.body.password)
-    if(!user){
-        res.send(401)
-        return
-    }
-    const token = await jwtService.createJwt(user)
-    console.log(token)
-    res.status(204).send(token)
-})
+authRouter.post('/login', 
+        authController.login.bind(authController))
+
+authRouter.post('/refresh-token', 
+        authController.refreshToken.bind(authController))
+
+authRouter.post('/registration-confirmation', 
+    userCodeRegistrationIsValid,
+    inputValidationMiddleware, 
+        authController.registrationConfirmation.bind(authController))
+
+authRouter.post('/registration', 
+    userLoginIsExistsValidation,
+    userEmailIsExistsValidation,
+    userLoginValidation,
+    userPasswordValidation,
+    userEmailValidation,
+    inputValidationMiddleware, 
+        authController.registration.bind(authController))
+
+authRouter.post('/registration-email-resending', 
+    userEmailConfirmValidation,
+    userEmailValidation,
+    inputValidationMiddleware, 
+        authController.registrationEmailResending.bind(authController))
+
+authRouter.post('/logout', 
+        authController.logout.bind(authController))
+
+authRouter.get('/me', 
+    jwtMiddleware,
+        authController.getMe.bind(authController))

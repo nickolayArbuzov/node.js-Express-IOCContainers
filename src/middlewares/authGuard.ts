@@ -1,32 +1,58 @@
-import {NextFunction, Request, Response} from "express";
-import {userService} from "../domain/user-service";
+import {NextFunction, Request, Response} from 'express'
+import { inject, injectable } from 'inversify';
+import {jwtService} from "../application/jwtService";
+import { container } from '../composition-root';
+import {UsersService} from "../domain/usersService";
 
-export const authGuard = async (req:Request, res:Response, next:NextFunction)=>
-{
-    const header = req.header('Authorization')
-    if(!header){
-        res.send(401)
-        return
-    }
-    const matchArr = header.match(/^Basic (.*)$/)
-    if(!matchArr){
-        res.send(401)
-        return
-    }
-    const [login, passwd] = Buffer.from(matchArr[1], 'base64').toString().split(':');
-    /*const check = await userService.checkCredentials(login, passwd)
-    console.log("logopass = " + login +" -> "+passwd  )
-    console.log(check)
-    if(!check){
-        res.send(401); return;
-    }
-    next();*/
-
-    if (login === 'admin' && passwd==='qwerty') {
-        next();
-    }
-    else{
-        res.send(401)
-        return
+export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    if (req.headers?.authorization?.split(' ')[1] === new Buffer('admin:qwerty').toString('base64') && req.headers?.authorization?.split(' ')[0] === 'Basic'){
+        next()
+    } else {
+        res.sendStatus(401)
     }
 }
+
+export const jwtMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+    const userService = container.resolve(UsersService)
+    if(!req.headers.authorization){
+        res.sendStatus(401)
+        return
+    }
+    const token = req.headers.authorization.split(' ')[1]
+    const userId = await jwtService.getUserByAccessToken(token);
+    if(!userId){
+        res.sendStatus(401)
+        return
+    }
+    req.user = await userService.findById(userId.toString());
+    next()
+}
+
+/*@injectable
+class joinMw {
+    constructor(@inject jwtService: JWTService, @inject userService: UsersService){}
+
+    authMiddleware  (req: Request, res: Response, next: NextFunction)  {
+        if (req.headers?.authorization?.split(' ')[1] === new Buffer('admin:qwerty').toString('base64') && req.headers?.authorization?.split(' ')[0] === 'Basic'){
+            next()
+        } else {
+            res.sendStatus(401)
+        }
+       async jwtMiddleware   (req: Request, res: Response, next: NextFunction)  {
+            const userService = container.resolve(UsersService)
+            if(!req.headers.authorization){
+                res.send(401)
+                return
+            }
+            const token = req.headers.authorization.split(' ')[1]
+        
+            const userId = await jwtService.getUserByAccessToken(token);
+        
+            if(!userId){
+                res.send(401)
+                return
+            }
+            req.user = await userService.findById(userId.toString());
+            next()
+        }
+}*/

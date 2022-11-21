@@ -36,7 +36,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "jest --config jest.config.js",
-    "test-w": "jest --config jest.config.js --watch --runInBand"
+    "test-w": "jest --config src/jest.config.ts --watch --runInBand"
   },
   "devDependencies": {
     "@types/cors": "^2.8.12",
@@ -50,9 +50,5 @@
     "ts-jest": "^28.0.8",
     "ts-node": "^10.7.0",
     "typescript": "^4.6.3"
-  },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node"
   }
 }

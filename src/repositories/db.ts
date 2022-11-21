@@ -1,14 +1,16 @@
 import {MongoClient} from 'mongodb'
-import {blogType, postType} from "../types";
 import "dotenv/config";
+import { PostType, BlogType, UserInputType, CommentType} from '../types';
 
 const mongoURI = process.env.MONGO_URL || "";
 
 export const client = new MongoClient(mongoURI);
-export const blogCollection = client.db("ht_03").collection<blogType>("blogs");
-export const postCollection = client.db("ht_03").collection<postType>("posts");
-export const userCollection = client.db("ht_03").collection("users");
-export const commentsCollection = client.db("ht_03").collection("comments");
+export const blogCollection = client.db("ht_03").collection<BlogType>("blogs",);
+export const postCollection = client.db("ht_03").collection<PostType>("posts");
+export const userCollection = client.db("ht_03").collection<UserInputType>("users");
+export const commentCollection = client.db("ht_03").collection<CommentType>("comments");
+export const jwtCollection = client.db("ht_03").collection("jwt");
+export const logCollection = client.db("ht_03").collection("logs");
 
 export async function runDb(){
     try {

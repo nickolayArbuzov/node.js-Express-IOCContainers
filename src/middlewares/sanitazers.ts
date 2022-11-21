@@ -1,61 +1,60 @@
-import { CustomSanitizer, query, validationResult } from 'express-validator';
+import { CustomSanitizer, query } from 'express-validator';
 
-const initSortBy:CustomSanitizer = value => {
+const SearchNameTerm: CustomSanitizer = value => {
+    if(!value){
+        return ""
+    }
+    return value
+}
+export const searchNameTermSanitizer = query('searchNameTerm').customSanitizer(SearchNameTerm)
+
+const SearchLoginTerm: CustomSanitizer = value => {
+    if(!value){
+        return ""
+    }
+    return value
+}
+export const searchLoginTermSanitizer = query('searchLoginTerm').customSanitizer(SearchLoginTerm)
+
+const SearchEmailTerm: CustomSanitizer = value => {
+    if(!value){
+        return ""
+    }
+    return value
+}
+export const searchEmailTermSanitizer = query('searchEmailTerm').customSanitizer(SearchEmailTerm)
+
+const PageNumber: CustomSanitizer = value => {
+    if(!value || typeof value === "undefined"){
+        return 1
+    }
+    return value
+}
+export const pageNumberSanitizer = query('pageNumber').customSanitizer(PageNumber)
+
+const PageSize: CustomSanitizer = value => {
+    if(!value || typeof value === "undefined") {
+        return 10
+    }
+    return value
+}
+export const pageSizeSanitizer = query('pageSize').customSanitizer(PageSize)
+
+const SortBy: CustomSanitizer = value => {
     if(!value){
         return "createdAt"
     }
     return value
 }
-export const sortBySanitizer = query('sortBy').customSanitizer(initSortBy)
+export const sortBySanitizer = query('sortBy').customSanitizer(SortBy)
 
-const initSearchNameTerm:CustomSanitizer = value => {
-    if(!value){
-        return ""
-    }
-    return value
-}
-export const searchNameTermSanitizer = query('searchNameTerm').customSanitizer(initSearchNameTerm)
-const initSearchLoginTerm:CustomSanitizer = value => {
-    if(!value){
-        return ""
-    }
-    return value
-}
-export const searchLoginTermSanitizer = query('searchLoginTerm').customSanitizer(initSearchLoginTerm)
-const initSearchEmailTerm:CustomSanitizer = value => {
-    if(!value){
-        return ""
-    }
-    return value
-}
-export const searchEmailTermSanitizer = query('searchEmailTerm').customSanitizer(initSearchEmailTerm)
-const initSortDirection:CustomSanitizer = value => {
+const SortDirection: CustomSanitizer = value => {
     if(!value || !value.includes('asc','desc')){
         return -1
     }
     if(value === "desc"){
         return -1
     }
-    else return 1
-
+    return 1
 }
-export const sortDirectionSanitizer = query('sortDirection').customSanitizer(initSortDirection)
-
-const initPageNumber:CustomSanitizer = value => {
-    console.log(" initPafe "+value)
-    if(!value || typeof value === "undefined"){
-        console.log("value is undefined")
-        return 1
-    }
-    return value
-}
-export const pageNumberSanitizer = query('pageNumber').customSanitizer(initPageNumber)
-
-const initPageSize:CustomSanitizer = value => {
-    if(!value || typeof value === "undefined") {
-        console.log("value is undefined")
-        return 10
-    }
-    return value
-}
-export const pageSizeSanitizer = query('pageSize').customSanitizer(initPageSize)
+export const sortDirectionSanitizer = query('sortDirection').customSanitizer(SortDirection)

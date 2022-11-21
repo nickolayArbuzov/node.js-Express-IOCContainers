@@ -1,183 +1,93 @@
 import request from 'supertest'
-import { app, startServer } from '../index'
+import { app } from '../app'
 
-/*jest.setTimeout(60000)
-describe('/video', () => {
+jest.setTimeout(10000)
+describe('/users', () => {
 
-    let inputModelVideo1 = {
-        id: '1',
-        title: 'title',
-        author: 'author',
-        availableResolutions: ['P144'],
+    let inputModelUser1 = {
+        login: 'login-1',
+        password: "password-1",
+        email: "nickarbuzov@yandex.by",
     }
-    let inputModelVideo2 = {
-        id: '2',
-        title: 'title2',
-        author: 'author2',
-        availableResolutions: ['P240'],
+    let inputModelUser2 = {
+        login: 'login-2',
+        password: "password-2",
+        email: "www.mail-2@mail.com",
     }
-    let updateModelVideo = {
-        title: 'new title',
-        author: 'new author',
-        minAgeRestriction: 18,
+    let correctInputModelAuth = {
+        loginOrEmail: 'nickarbuzov@yandex.by',
+        password: "password-1",
     }
+    let correctInputModelAuth2 = {
+        loginOrEmail: 'login-2',
+        password: "password-2",
+    }
+    let incorrectPassInputModelAuth = {
+        login: 'login-4',
+        password: "password-5",
+    }
+    let incorrectInputModelAuth = {
+        login: 'login-5',
+        password: "password-5",
+    }
+
+    let accessToken = ''
+    let incorrectAccessToken = '0000bGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MzczODA3MmZhMjM0MmJmZTg1MzFhMjQiLCJpYXQiOjE2Njg1MTM5MDYsImV4cCI6MTY2ODYwMDMwNn0.0b5aWY3mwo9vOsglyEmMTr40xWOtSP0uSiU72gP-tdw'
+    let accessToken2 = ''
+
+    let refreshToken = ''
+    let incorrectRefreshToken = ''
+
+    let realUserId = ''
+    let incorrectUserId = '000d727e3f7e0f76da66c064'
 
     it('should delete all data', async () => {
         await request(app).delete('/testing/all-data').expect(204)
     })
 
-    it('should return added video if values correct', async () => {
+    it('should return registration user if values correct', async () => {
         await request(app)
-            .post('/videos')
-            .send(inputModelVideo1).expect(201)
+            .post('/auth/registration')
+            .send(inputModelUser1).expect(204)
         await request(app)
-            .post('/videos')
-            .send(inputModelVideo2).expect(201)
+            .post('/auth/registration')
+            .send(inputModelUser2).expect(204)
 
-        const res = await request(app).get(`/videos/${inputModelVideo1.id}`)
+        const res = await request(app).get(`/users`).set('Authorization', 'Basic YWRtaW46cXdlcnR5')
 
-        expect(res.body).toStrictEqual([
-            {
-                id: inputModelVideo1.id,
-                title: inputModelVideo1.title,
-                author: inputModelVideo1.author,
-                canBeDownloaded: true,
-                minAgeRestriction: null,
-                createdAt: expect.any(String),
-                publicationDate: expect.any(String),
-                availableResolutions: inputModelVideo1.availableResolutions
-            },
-        ])
+        realUserId = res.body.items[1].id
     })
 
+    it('should return accesstoken with login by correct values', async () => {
+        const auth = await request(app).post('/auth/login').send(correctInputModelAuth).expect(200)
+        accessToken = auth.body.accessToken
+        expect(auth.body).toStrictEqual({
+            accessToken: expect.any(String)
+        })
+
+        refreshToken = auth.header['set-cookie'][0].split(';')[0].split('=')[1]
+
+        expect(auth.header['set-cookie'][0].split(';')[0].split('=')[0]).toBe('refreshToken')
+
+        const auth2 = await request(app).post('/auth/login').send(correctInputModelAuth2).expect(200)
+        accessToken2 = auth2.body.accessToken
+    })
+
+    it('should refresh-tokens', async () => {
+        const auth = await request(app).post('/auth/refresh-token').set('Cookie', ["refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MzdiNzM5OGE1YTczZDdlMTgzZDlmZDMiLCJpYXQiOjE2NjkwMzQ5MDcsImV4cCI6MTY2OTAzNDkyN30.OUg8_KwJNBkxOh_E0SeflRz2dU3TC5Ks1AhnAriV7x4"]).send(correctInputModelAuth).expect(200)
+        accessToken = auth.body.accessToken
+        expect(auth.body).toStrictEqual({
+            accessToken: expect.any(String)
+        })
+    })
     
     it('should return errors if values incorrect', async () => {
-        await request(app).post('/videos').send({}).expect(400, 
-            {errorMessages: [
-                { message: 'incorrect title', field: 'title' },
-                { message: 'incorrect author', field: 'author' },
+        await request(app).post('/auth/registration').send({}).expect(400, 
+            {errorsMessages: [
+                { message: 'incorrect field', field: 'login' },
+                { message: 'incorrect field', field: 'email' },
+                { message: 'field must be from 6 to 20 chars', field: 'password' }
             ]})
     })
 
-    it('should return all videos', async () => {
-        const res = await request(app)
-            .get('/videos')
-            .expect(200)
-
-        expect(res.body).toStrictEqual([
-                {
-                    id: inputModelVideo1.id,
-                    title: inputModelVideo1.title,
-                    author: inputModelVideo1.author,
-                    canBeDownloaded: true,
-                    minAgeRestriction: null,
-                    createdAt: expect.any(String),
-                    publicationDate: expect.any(String),
-                    availableResolutions: inputModelVideo1.availableResolutions
-                }, 
-                {
-                    id: inputModelVideo2.id,
-                    title: inputModelVideo2.title,
-                    author: inputModelVideo2.author,
-                    canBeDownloaded: true,
-                    minAgeRestriction: null,
-                    createdAt: expect.any(String),
-                    publicationDate: expect.any(String),
-                    availableResolutions: inputModelVideo2.availableResolutions
-                },
-            ])
-    })
-
-    it('should return one video', async () => {
-        const res = await request(app)
-            .get(`/videos/${inputModelVideo2.id}`)
-            .expect(200)
-
-        expect(res.body).toStrictEqual(
-            [{
-                id: inputModelVideo2.id,
-                title: inputModelVideo2.title,
-                author: inputModelVideo2.author,
-                canBeDownloaded: true,
-                minAgeRestriction: null,
-                createdAt: expect.any(String),
-                publicationDate: expect.any(String),
-                availableResolutions: inputModelVideo2.availableResolutions
-            }])
-    })
-
-    it('should return 404 if video for get not found', async () => {
-        await request(app)
-            .get(`/videos/${3}`)
-            .expect(404)
-    })
-
-    it('should return update video if values correct', async () => {
-        await request(app)
-            .put(`/videos/${1}`)
-            .send(updateModelVideo).expect(204)
-
-        const res = await request(app)
-            .get(`/videos/${1}`)
-            .expect(200)
-        
-        expect(res.body).toStrictEqual(
-            [{
-                id: inputModelVideo1.id,
-                title: updateModelVideo.title,
-                author: updateModelVideo.author,
-                canBeDownloaded: true,
-                minAgeRestriction: updateModelVideo.minAgeRestriction,
-                createdAt: expect.any(String),
-                publicationDate: expect.any(String),
-                availableResolutions: inputModelVideo1.availableResolutions
-            }]
-        )
-    })
-
-    it('should return errors if values incorrect', async () => {
-        await request(app)
-            .put(`/videos/${1}`)
-            .send({minAgeRestriction: '17', canBeDownloaded: 'true'})
-            .expect(400, {errorMessages: [
-                { message: 'incorrect title', field: 'title' },
-                { message: 'incorrect author', field: 'author' },
-                { message: 'incorrect minAgeRestriction', field: 'minAgeRestriction' },
-                { message: 'incorrect canBeDownloaded', field: 'canBeDownloaded' },
-            ]})
-    })
-
-    it('should return 404 if video for put not found', async () => {
-        await request(app)
-            .put(`/videos/${4}`)
-            .send(updateModelVideo)
-            .expect(404)
-    })
-
-    it('should return status 204 if video deleted', async () => {
-        await request(app)
-            .delete(`/videos/${2}`)
-            .expect(204)
-
-        await request(app)
-            .get(`/videos/${2}`)
-            .expect(404)
-
-        const res = await request(app)
-            .get(`/videos`)
-        
-        expect(res.body.length).toBe(1)
-    })
-
-    it('should return status 404 if video for delete not found', async () => {
-        await request(app)
-            .delete(`/videos/${4}`)
-            .expect(404)
-
-        const res = await request(app)
-            .get(`/videos`)
-        
-        expect(res.body.length).toBe(1)
-    })
-
-})*/
+})

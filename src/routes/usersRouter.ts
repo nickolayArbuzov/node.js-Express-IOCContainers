@@ -1,30 +1,46 @@
-import {Router, Request, Response} from "express";
-import {userService} from "../domain/user-service";
-import {create} from "domain";
-import {inputValidationMiddleware} from "../middlewares/inputValidationMiddleware";
-import {emailVAlidator, loginValidator, passwordValidator} from "../middlewares/userMiddleware";
-import {authGuard} from "../middlewares/authGuard";
+import {Router} from "express";
+import { container } from "../composition-root";
+import { UsersController } from "../controllers/usersController";
+import { 
+    inputValidationMiddleware, 
+    userEmailValidation,
+    userLoginValidation,
+    userPasswordValidation, 
+} from "../middlewares/middleware";
 import {
-    pageNumberSanitizer,
-    pageSizeSanitizer, searchEmailTermSanitizer, searchLoginTermSanitizer, searchNameTermSanitizer,
-    sortBySanitizer,
-    sortDirectionSanitizer
+    authMiddleware
+} from '../middlewares/authGuard';
+import { 
+    pageNumberSanitizer, 
+    pageSizeSanitizer, 
+    searchEmailTermSanitizer, 
+    searchLoginTermSanitizer, 
+    sortBySanitizer, 
+    sortDirectionSanitizer 
 } from "../middlewares/sanitazers";
+
+const usersController = container.resolve(UsersController)
 
 export const usersRouter = Router({})
 
-usersRouter.get('/',searchLoginTermSanitizer,searchEmailTermSanitizer, pageNumberSanitizer, pageSizeSanitizer, sortBySanitizer,sortDirectionSanitizer,async (req:Request, res:Response) => {
-    const {searchLoginTerm, searchEmailTerm, pageNumber, pageSize, sortBy, sortDirection} = req.query;
-    const users = await userService.getUsers(searchLoginTerm, searchEmailTerm,+pageNumber!, +pageSize!, sortBy, sortDirection);
-    res.status(200).send(users);
-})
-usersRouter.post('/',authGuard,loginValidator, passwordValidator, emailVAlidator, inputValidationMiddleware, async (req:Request, res:Response) => {
-    const {login, password, email} = req.body
-    const createdUser = await userService.createUser(login, password, email);
-    res.status(201).send(createdUser)
-})
-usersRouter.delete('/:id',authGuard, inputValidationMiddleware, async (req:Request, res:Response) => {
-    const {id} = req.params;
-    const isDeleted = await userService.deleteUser(id)
-    isDeleted ? res.send(204) : res.send(404)
-})
+usersRouter.get('/', 
+    authMiddleware, 
+    searchLoginTermSanitizer, 
+    searchEmailTermSanitizer,
+    pageNumberSanitizer, 
+    pageSizeSanitizer, 
+    sortBySanitizer, 
+    sortDirectionSanitizer, 
+        usersController.find.bind(usersController))
+
+usersRouter.post('/', 
+    authMiddleware, 
+    userLoginValidation,
+    userPasswordValidation,
+    userEmailValidation,
+    inputValidationMiddleware, 
+        usersController.create.bind(usersController))
+
+usersRouter.delete('/:id', 
+    authMiddleware, 
+        usersController.delete.bind(usersController))
