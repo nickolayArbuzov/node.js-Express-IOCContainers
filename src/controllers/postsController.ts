@@ -1,6 +1,7 @@
 import { injectable, inject } from "inversify";
 import {Request, Response} from 'express'
 import { PostsService } from "../domain/postsService";
+import { jwtService } from "../application/jwtService";
 
 @injectable()
 export class PostsController {
@@ -9,8 +10,13 @@ export class PostsController {
     ) {
     }
 
+    async like(req: Request, res: Response){
+        const result = await this.postsService.like(req.user!, req.body.likeStatus, req.params.id)
+        res.sendStatus(result ? 204 : 404)
+    }
+
     async findCommentbyPostId(req: Request, res: Response){
-        const result = await this.postsService.findCommentbyPostId(req.params.id, +req.query.pageNumber!, +req.query.pageSize!, req.query.sortBy, req.query.sortDirection)
+        const result = await this.postsService.findCommentbyPostId(req.params.id, +req.query.pageNumber!, +req.query.pageSize!, req.query.sortBy, req.query.sortDirection, req.userId ? req.userId : '')
         if(result) {
             res.send(result)
         } else {
@@ -28,7 +34,7 @@ export class PostsController {
     }
 
     async find(req: Request, res: Response){
-        const result = await this.postsService.find(+req.query.pageNumber!, +req.query.pageSize!, req.query.sortBy, req.query.sortDirection)
+        const result = await this.postsService.find(+req.query.pageNumber!, +req.query.pageSize!, req.query.sortBy, req.query.sortDirection, req.userId ? req.userId : '')
         res.send(result)
     }
 
@@ -38,7 +44,7 @@ export class PostsController {
     }
 
     async findById(req: Request, res: Response){
-        const post = await this.postsService.findById(req.params.id)
+        const post = await this.postsService.findById(req.params.id, req.userId ? req.userId : '')
         if(post) {
             res.status(200).send(post)
         } else {

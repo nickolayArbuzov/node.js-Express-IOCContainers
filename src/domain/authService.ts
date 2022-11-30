@@ -1,57 +1,78 @@
 import { injectable, inject } from "inversify";
-import { jwtCollection, logCollection, userCollection } from "../repositories/db";
+import { devicesCollection, logCollection, userCollection } from "../repositories/db";
 import bcrypt from 'bcrypt';
 import { jwtService } from "../application/jwtService";
 import { ObjectId } from "mongodb";
-import { UserInputType } from "../types";
+import { DeviceType, UserInputType } from "../types";
 import { UsersRepo } from "../repositories/usersRepo";
 import { v4 } from "uuid";
 import { sendEmail } from "../adapters/mail.adapter";
 import jwt from 'jsonwebtoken'
+import { DevicesRepo } from "../repositories/devicesRepo";
 
 @injectable()
 export class AuthService {
-    constructor(@inject(UsersRepo) protected usersRepo: UsersRepo) {
-    }
+    constructor(
+        @inject(UsersRepo) protected usersRepo: UsersRepo,
+        @inject(DevicesRepo) protected devicesRepo: DevicesRepo
+    ) {}
 
-    async login(loginOrEmail: string, password: string){
+    async login(loginOrEmail: string, password: string, ip: string, deviceName: string){
+
         const candidate = await this.usersRepo.findByLoginOrEmail(loginOrEmail)
+        
         if(!candidate) {
             return false
         }
         const candidateHash = await bcrypt.hash(password, candidate.passwordSalt)
         //bcrypt.compare(password, )
-        if(candidateHash === candidate.passwordHash && candidate) {
-            const tokens = await jwtService.createJwt(candidate?.id?.toString() ? candidate?.id?.toString() : '')
-            await jwtCollection.insertOne({userId: candidate.id, refreshToken: tokens.refreshToken, revoke: false})
+        if(candidateHash === candidate.passwordHash) {
+            const deviceId = v4()
+            const device: DeviceType = {
+                ip: ip,
+                title: deviceName, 
+                deviceId: deviceId,
+                issuedAt: new Date().getTime(),
+                expiresAt: new Date().getTime() + 20000,
+                userId: candidate.id!.toString(),
+            }
+            const tokens = await jwtService.createJwt(candidate?.id?.toString() ? candidate?.id?.toString() : '', device.deviceId, device.issuedAt)
+            
+            await this.devicesRepo.create(device)
             return tokens
         } else {
             return false
         }
     }
 
+    async passwordRecovery(email: string){
+        const code = v4()
+        await this.usersRepo.resendUserNewCode(email, code)
+        await sendEmail(email, code, 'password-recovery?recoveryCode')
+    }
+
+    async newPassword(password: string, code: string){
+        const passwordSalt = await bcrypt.genSalt(8)
+        const passwordHash = await bcrypt.hash(password, passwordSalt)
+        return await this.usersRepo.newPassword(passwordHash, passwordSalt, code)
+    }
+
     async refreshToken(refreshToken: string){
-        try {
-            jwt.verify(refreshToken, process.env.JWT_SECRET || 'secret')
-        } catch(e) {
-            return false
-        }
-        const refresh = await jwtCollection.findOne({refreshToken: refreshToken})
-        const user = await this.usersRepo.findById(refresh?.userId)
+        const refresh = await jwtService.expandJwt(refreshToken)
+        const issuedAt = new Date().getTime()
+        const expiresAt = new Date().getTime() + 20000
         if(refresh && !refresh.revoke) {
-            const tokens = await jwtService.createJwt(user?.id?.toString() ? user?.id?.toString() : '')
-            await jwtCollection.insertOne({userId: user?.id, refreshToken: tokens.refreshToken, revoke: false})
-            await jwtCollection.updateOne({_id: new ObjectId(refresh._id)}, {$set: {revoke: true}})
+            const tokens = await jwtService.createJwt(refresh.userId, refresh.deviceId, issuedAt)
+            await devicesCollection.updateOne({deviceId: refresh.deviceId}, {$set: {issuedAt: issuedAt, expiresAt: expiresAt}})
             return tokens
         } else return false
-    }
+    } 
 
     async registrationConfirmation(code: string){
         return await this.usersRepo.activateUserByCode(code)
     }
 
     async registration(login: string, password: string, email: string){
-
         const passwordSalt = await bcrypt.genSalt(8)
         const passwordHash = await bcrypt.hash(password, passwordSalt)
         const code = v4()
@@ -67,21 +88,19 @@ export class AuthService {
         }
 
         await this.usersRepo.create(user)
-        await sendEmail(email, code, 'confirm-email')
+        await sendEmail(email, code, 'confirm-email?code')
     }
 
     async registrationEmailResending(email: string){
         const code = v4()
         await this.usersRepo.resendUserNewCode(email, code)
-        await sendEmail(email, code, 'confirm-registration')
+        await sendEmail(email, code, 'confirm-registration?code')
         return true
     }
 
-    async logout(refreshToken: string){
-        const refresh = await jwtCollection.findOne({refreshToken: refreshToken})
-        if(refresh && !refresh.revoke) {
-            await jwtCollection.updateOne({_id: new ObjectId(refresh._id)}, {$set: {revoke: true}})
-        } else return false
+    async logout(userId: string, deviceId: string){
+        await devicesCollection.deleteOne({userId: userId, deviceId: deviceId})
+        return true
     }
 
     async getMe(id: string){

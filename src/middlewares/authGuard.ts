@@ -13,18 +13,43 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
 }
 
 export const jwtMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-    const userService = container.resolve(UsersService)
     if(!req.headers.authorization){
         res.sendStatus(401)
         return
     }
     const token = req.headers.authorization.split(' ')[1]
-    const userId = await jwtService.getUserByAccessToken(token);
-    if(!userId){
+    const refreshToken = await jwtService.expandJwt(token);
+    if(!refreshToken){
         res.sendStatus(401)
         return
     }
-    req.user = await userService.findById(userId.toString());
+    const userService = container.resolve(UsersService)
+    req.user = await userService.findById(refreshToken.userId);
+    next()
+}
+
+export const extractUserIdFromToken = async (req: Request, res: Response, next: NextFunction) => {
+    if(!req.headers.authorization){
+        next()
+        return
+    }
+    const token = req.headers.authorization.split(' ')[1]
+    const refreshToken = await jwtService.expandJwt(token);
+    if(!refreshToken){
+        next()
+        return
+    }
+
+    req.userId = refreshToken.userId;
+    next()
+}
+
+export const refreshTokenMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+    const refreshToken = req.cookies.refreshToken
+    if(!refreshToken) {
+        res.sendStatus(401)
+        return
+    }
     next()
 }
 
@@ -46,13 +71,13 @@ class joinMw {
             }
             const token = req.headers.authorization.split(' ')[1]
         
-            const userId = await jwtService.getUserByAccessToken(token);
+            const refreshToken = await jwtService.expandJwt(token);
         
-            if(!userId){
+            if(!refreshToken.userId){
                 res.send(401)
                 return
             }
-            req.user = await userService.findById(userId.toString());
+            req.user = await userService.findById(!refreshToken.userId.toString());
             next()
         }
 }*/

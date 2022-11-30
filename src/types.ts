@@ -42,3 +42,21 @@ export type CommentType = {
         postId: string,
         createdAt: string,
 }
+
+export type DeviceType = {
+        ip: string,
+        title: string,
+        deviceId: string,
+        issuedAt: number,
+        expiresAt: number,
+        userId: string,
+}
+
+export type LikeType = {
+        userId: string,
+        login: string,
+        postId: string | null,
+        commentId: string | null,
+        addedAt: string,
+        status: string,
+}

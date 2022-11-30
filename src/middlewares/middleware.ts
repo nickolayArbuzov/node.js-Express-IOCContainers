@@ -6,7 +6,7 @@ import { UsersRepo } from '../repositories/usersRepo';
 
 
 export const logger = async (req: Request, res: Response, next: NextFunction) => {
-    await logCollection.insertOne({cookie: req.cookies, url: req.originalUrl, date: new Date()})
+    await logCollection.insertOne({cookie: req.cookies, url: req.originalUrl, date: new Date(), data: req.body, access: req.headers.authorization})
     next()
 }
 
@@ -19,7 +19,7 @@ const isValidUrl: CustomValidator = value => {
 
 const isValidEmail: CustomValidator = value => {
     if(!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value)){
-        throw new Error('Invalid URL')
+        throw new Error('Invalid Email')
     }
     return true
 };
@@ -35,11 +35,18 @@ const isBlogIdValid: CustomValidator = async value => {
 
 const isCodeFromEmailValid: CustomValidator = async value => {
     const usersRepo = new UsersRepo()
-    const flag = await usersRepo.findById(value)
+    const flag = await usersRepo.findByCode(value)
     if (!flag) {
-        throw new Error('Invalid BlogID')
+        throw new Error('Invalid Code')
     }
     return true
+}
+
+const isLikeStatusValid: CustomValidator = async value => {
+    if(value === "None" || value === "Like" || value === "Dislike"){
+        return true
+    }
+    throw new Error('Invalid LikeStatus')
 }
     
 export const inputValidationMiddleware = (req: Request, res: Response, next: NextFunction) => {
@@ -69,3 +76,8 @@ export const userEmailValidation = body('email').custom(isValidEmail).withMessag
 export const commentContentValidation = body('content').trim().isLength({min: 20, max: 300}).withMessage('field must be from 20 to 300 chars')
 
 export const codeFromEmailValidation = body('code').custom(isCodeFromEmailValid).withMessage('code not correct')
+
+export const newPasswordValidation = body('newPassword').trim().isLength({min: 6, max: 20}).withMessage('field must be from 6 to 20 chars')
+export const recoveryCodeValidation = body('recoveryCode').custom(isCodeFromEmailValid).withMessage('code not correct')
+
+export const likesValidation = body('likeStatus').custom(isLikeStatusValid).withMessage('status in not correct')

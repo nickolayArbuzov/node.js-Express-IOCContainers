@@ -1,10 +1,16 @@
 import { injectable, inject } from "inversify";
 import {Request, Response} from 'express'
 import { CommentsService } from "../domain/commentsService";
+import { jwtService } from "../application/jwtService";
 
 @injectable()
 export class CommentsController {
     constructor(@inject(CommentsService) protected commentsService: CommentsService) {
+    }
+
+    async like(req: Request, res: Response){
+        const result = await this.commentsService.like(req.user!, req.body.likeStatus, req.params.id)
+        res.sendStatus(result ? 204 : 404)
     }
 
     async find(req: Request, res: Response){
@@ -13,7 +19,7 @@ export class CommentsController {
     }
 
     async findOne(req: Request, res: Response){
-        const result = await this.commentsService.findOne(req.params.id)
+        const result = await this.commentsService.findOne(req.params.id, req.userId ? req.userId : '')
         if(result) {
             res.send(result)
         } else {

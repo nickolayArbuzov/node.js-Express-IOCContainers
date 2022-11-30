@@ -1,6 +1,7 @@
 import { injectable, inject } from "inversify";
 import {Request, Response} from 'express'
 import { AuthService } from "../domain/authService";
+import { jwtService } from "../application/jwtService";
 
 @injectable()
 export class AuthController {
@@ -8,19 +9,34 @@ export class AuthController {
     }
 
     async login(req: Request, res: Response){
-        const auth = await this.authService.login(req.body.loginOrEmail, req.body.password)
+        const auth = await this.authService.login(req.body.loginOrEmail, req.body.password, req.ip, req.headers['user-agent'] || '')
         if(auth) {
 
-            res.cookie('refreshToken', auth.refreshToken, {
-                httpOnly: true,
-                secure: true,
-            });
+            res.cookie(
+                'refreshToken', 
+                auth.refreshToken, 
+                {
+                    httpOnly: true,
+                    secure: true,
+                    maxAge: 24*60*60*1000,
+                }
+            );
 
             res.send({accessToken: auth.accessToken})
             
         } else {
             res.sendStatus(401)
         }
+    }
+
+    async passwordRecovery(req: Request, res: Response){
+        await this.authService.passwordRecovery(req.body.email)
+        res.sendStatus(204)
+    }
+
+    async newPassword(req: Request, res: Response){
+        await this.authService.newPassword(req.body.newPassword, req.body.recoveryCode)
+        res.sendStatus(204)
     }
 
     async refreshToken(req: Request, res: Response){
@@ -31,11 +47,11 @@ export class AuthController {
                 secure: true,
             });
 
-            res.send({ accessToken: result.accessToken });
+            res.status(200).send({ accessToken: result.accessToken });
              
         } else {
             res.sendStatus(401)
-        }        
+        }      
     }
 
     async registrationConfirmation(req: Request, res: Response){
@@ -54,7 +70,9 @@ export class AuthController {
     }
 
     async logout(req: Request, res: Response){
-        const result = await this.authService.refreshToken(req.cookies.refreshToken)
+        const refreshToken = await jwtService.expandJwt(req.cookies.refreshToken)
+        const result = await this.authService.logout(refreshToken.userId, refreshToken.deviceId)
+        // зануление куки
         if(result) {
             res.sendStatus(204)
         } else {

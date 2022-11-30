@@ -4,6 +4,8 @@ import { PostsController } from "../controllers/postsController";
 import { 
     commentContentValidation, 
     inputValidationMiddleware, 
+    likesValidation, 
+    logger, 
     postBlogIdValidation, 
     postContentValidation, 
     postShortDescrValidation, 
@@ -11,6 +13,7 @@ import {
 } from "../middlewares/middleware";
 import {
     authMiddleware,
+    extractUserIdFromToken,
     jwtMiddleware
 } from '../middlewares/authGuard';
 import { pageNumberSanitizer, pageSizeSanitizer, sortBySanitizer, sortDirectionSanitizer } from "../middlewares/sanitazers";
@@ -19,7 +22,14 @@ const postsController = container.resolve(PostsController)
 
 export const postsRouter = Router({})
 
+postsRouter.put('/:id/like-status', 
+    jwtMiddleware,
+    likesValidation,
+    inputValidationMiddleware, 
+        postsController.like.bind(postsController))
+
 postsRouter.get('/:id/comments', 
+    extractUserIdFromToken,
     pageNumberSanitizer, 
     pageSizeSanitizer, 
     sortBySanitizer, 
@@ -33,6 +43,7 @@ postsRouter.post('/:id/comments',
         postsController.createCommentbyPostId.bind(postsController))
 
 postsRouter.get('/', 
+    extractUserIdFromToken,
     pageNumberSanitizer, 
     pageSizeSanitizer, 
     sortBySanitizer, 
@@ -49,6 +60,7 @@ postsRouter.post('/',
         postsController.create.bind(postsController))
 
 postsRouter.get('/:id', 
+    extractUserIdFromToken,
         postsController.findById.bind(postsController))
 
 postsRouter.put('/:id', 
