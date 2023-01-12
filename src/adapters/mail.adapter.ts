@@ -1,6 +1,6 @@
 import * as nodemailer from "nodemailer";
 
-export const sendEmail = async (email: string, code: string, action: string) => {
+export const sendEmail = async (email: string, link: string, code: string, action: string) => {
 
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -12,7 +12,7 @@ export const sendEmail = async (email: string, code: string, action: string) => 
 
   const emailTemplate = (code: string) => `<h1>Thank for your registration</h1>
       <p>To finish registration please follow the link below:
-        <a href='https://somesite.com/${action}=${code}'>complete registration</a>
+        <a href='${link}/${action}=${code}'>complete registration</a>
      </p>`
  
   await transporter.sendMail({

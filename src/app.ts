@@ -14,7 +14,9 @@ export const app = express()
 
 app.use(express.json())
 app.use(cookieParser())
-app.use(cors())
+app.use(cors({
+    origin: ['https://bloger-platform.vercel.app', 'http://localhost:3000'],
+}))
 app.set('trust proxy', true)
 
 app.use('/blogs', blogsRouter) 

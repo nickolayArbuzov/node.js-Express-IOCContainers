@@ -45,10 +45,10 @@ export class AuthService {
         }
     }
 
-    async passwordRecovery(email: string){
+    async passwordRecovery(email: string, link: string){
         const code = v4()
         await this.usersRepo.resendUserNewCode(email, code)
-        await sendEmail(email, code, 'password-recovery?recoveryCode')
+        await sendEmail(email, link, code, 'password-recovery?recoveryCode')
     }
 
     async newPassword(password: string, code: string){
@@ -72,7 +72,7 @@ export class AuthService {
         return await this.usersRepo.activateUserByCode(code)
     }
 
-    async registration(login: string, password: string, email: string){
+    async registration(login: string, password: string, email: string, link: string){
         const passwordSalt = await bcrypt.genSalt(8)
         const passwordHash = await bcrypt.hash(password, passwordSalt)
         const code = v4()
@@ -88,13 +88,13 @@ export class AuthService {
         }
 
         await this.usersRepo.create(user)
-        await sendEmail(email, code, 'confirm-email?code')
+        await sendEmail(email, link, code, 'confirm-email?code')
     }
 
-    async registrationEmailResending(email: string){
+    async registrationEmailResending(email: string, link: string){
         const code = v4()
         await this.usersRepo.resendUserNewCode(email, code)
-        await sendEmail(email, code, 'confirm-registration?code')
+        await sendEmail(email, link, code, 'confirm-registration?code')
         return true
     }
 

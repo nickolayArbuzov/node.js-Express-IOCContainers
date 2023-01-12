@@ -30,7 +30,7 @@ export class AuthController {
     }
 
     async passwordRecovery(req: Request, res: Response){
-        await this.authService.passwordRecovery(req.body.email)
+        await this.authService.passwordRecovery(req.body.email, req.body.link)
         res.sendStatus(204)
     }
 
@@ -60,12 +60,12 @@ export class AuthController {
     }
 
     async registration(req: Request, res: Response){
-        await this.authService.registration(req.body.login, req.body.password, req.body.email)
+        await this.authService.registration(req.body.login, req.body.password, req.body.email, req.body.link)
         res.sendStatus(204)
     }
 
     async registrationEmailResending(req: Request, res: Response){
-        await this.authService.registrationEmailResending(req.body.email)
+        await this.authService.registrationEmailResending(req.body.email, req.body.link)
         res.sendStatus(204)
     }
 
