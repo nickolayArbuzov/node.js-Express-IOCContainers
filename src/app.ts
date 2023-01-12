@@ -15,7 +15,7 @@ export const app = express()
 app.use(express.json())
 app.use(cookieParser())
 app.use(cors({
-    origin: ['https://bloger-platform.vercel.app', 'http://localhost:3000'],
+    origin: ['https://bloger-platform.vercel.app', 'https://blogger-platform-admin.vercel.app', 'http://localhost:3000'],
 }))
 app.set('trust proxy', true)
 
