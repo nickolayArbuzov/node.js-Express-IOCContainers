@@ -16,6 +16,7 @@ export class AuthController {
                 'refreshToken', 
                 auth.refreshToken, 
                 {
+                    sameSite: 'none',
                     httpOnly: true,
                     secure: true,
                     maxAge: 24*60*60*1000,
@@ -71,10 +72,15 @@ export class AuthController {
 
     async logout(req: Request, res: Response){
         const refreshToken = await jwtService.expandJwt(req.cookies.refreshToken)
-        const result = await this.authService.logout(refreshToken.userId, refreshToken.deviceId)
-        // зануление куки
-        if(result) {
-            res.sendStatus(204)
+        console.log('refreshToken', refreshToken)
+        if(refreshToken){
+            const result = await this.authService.logout(refreshToken.userId, refreshToken.deviceId)
+            // зануление куки
+            if(result) {
+                res.sendStatus(204)
+            } else {
+                res.sendStatus(401)
+            }
         } else {
             res.sendStatus(401)
         }
