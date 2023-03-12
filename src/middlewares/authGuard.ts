@@ -45,9 +45,7 @@ export const extractUserIdFromToken = async (req: Request, res: Response, next: 
 }
 
 export const refreshTokenMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-    console.log('req.cookies', req.cookies)
     const refreshToken = req.cookies.refreshToken
-    console.log('refreshToken', req.cookies.refreshToken)
     if(!refreshToken) {
         res.sendStatus(401)
         return

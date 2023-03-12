@@ -72,7 +72,6 @@ export class AuthController {
 
     async logout(req: Request, res: Response){
         const refreshToken = await jwtService.expandJwt(req.cookies.refreshToken)
-        console.log('refreshToken', refreshToken)
         if(refreshToken){
             const result = await this.authService.logout(refreshToken.userId, refreshToken.deviceId)
             // зануление куки
